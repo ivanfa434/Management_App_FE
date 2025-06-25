@@ -34,15 +34,16 @@ export const TaskCard = ({
         ref={provided.innerRef}
         {...provided.draggableProps}
         {...provided.dragHandleProps}
-        className={`cursor-pointer transition-all duration-200 ${
-          snapshot.isDragging ? "shadow-lg rotate-2" : "hover:shadow-sm"
+        className={`group cursor-pointer transition-all duration-200 border border-border hover:border-blue-200 hover:shadow-md hover:shadow-blue-50 ${
+          snapshot.isDragging ? "shadow-lg rotate-2" : ""
         }`}
       >
         <CardHeader className="pb-2 p-3 lg:p-4 lg:pb-2">
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-xs lg:text-sm line-clamp-2 flex-1">
+            <CardTitle className="text-xs lg:text-sm line-clamp-2 flex-1 group-hover:text-blue-600 transition-colors">
               {task.title}
             </CardTitle>
+
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
@@ -90,14 +91,16 @@ export const TaskCard = ({
               </div>
             </div>
             <Badge
-              variant={
-                task.status === "TODO"
-                  ? "secondary"
-                  : task.status === "IN_PROGRESS"
-                  ? "default"
-                  : "outline"
-              }
               className="text-xs"
+              style={{
+                backgroundColor:
+                  task.status === "TODO"
+                    ? "#ef4444"
+                    : task.status === "IN_PROGRESS"
+                    ? "#f59e0b"
+                    : "#10b981",
+                color: "white",
+              }}
             >
               {task.status === "TODO"
                 ? "Todo"

@@ -9,11 +9,11 @@ export interface Project {
   createdAt: Date;
   updatedAt: Date;
   owner?: User;
-  members?: ProjectMember[];
+  memberships?: ProjectMember[];
   tasks?: Task[];
   _count?: {
     tasks: number;
-    members: number;
+    memberships: number;
   };
 }
 
@@ -21,7 +21,6 @@ export interface ProjectMember {
   id: string;
   projectId: string;
   userId: string;
-  role: string;
   createdAt: Date;
   updatedAt: Date;
   user?: User;

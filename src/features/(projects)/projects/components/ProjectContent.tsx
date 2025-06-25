@@ -1,12 +1,9 @@
 "use client";
 
+import { ProjectSkeleton } from "@/components/LoadingSkeleton";
+import NotFound from "@/components/NotFound";
 import { Button } from "@/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -25,51 +22,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import useGetProjectAnalytics from "@/hooks/api/analytic/useGetProjectAnalytics";
+import useGetProject from "@/hooks/api/project/useGetProject";
+import useCreateTask from "@/hooks/api/task/useCreateTask";
+import useDeleteTask from "@/hooks/api/task/useDeleteTask";
+import useGetProjectTasks from "@/hooks/api/task/useGetProjectTasks";
+import useUpdateTask from "@/hooks/api/task/useUpdateTask";
 import type { Task } from "@/types/task";
-import { useFormik } from "formik";
-import {
-  Plus,
-  Settings,
-  User as UserIcon,
-  BarChart3,
-  Edit2,
-  Trash2,
-  Calendar,
-} from "lucide-react";
-import Link from "next/link";
-import { useState, useMemo } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import NotFound from "@/components/NotFound";
-import { CreateTaskSchema } from "../schema";
-import useGetProject from "@/hooks/project/useGetProject";
-import useGetProjectTasks from "@/hooks/task/useGetProjectTasks";
-import useUpdateTask from "@/hooks/task/useUpdateTask";
-import useDeleteTask from "@/hooks/task/useDeleteTask";
-import { ProjectSkeleton } from "@/components/LoadingSkeleton";
 import type { User } from "@/types/user";
-import useGetProjectAnalytics from "@/hooks/analytic/useGetProjectAnalytics";
+import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { useFormik } from "formik";
+import { BarChart3, Plus, Settings } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "@hello-pangea/dnd";
-import {
-  LineChart,
-  Line,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
 } from "recharts";
+import { CreateTaskSchema } from "../schema";
 import { EditTaskDialog } from "./EditTaskDialog";
-import { TaskCard } from "./TaskCard";
 import { TaskColumn } from "./TaskColumn";
-import useCreateTask from "@/hooks/task/useCreateTask";
 
 interface ProjectContentProps {
   projectId: string;
@@ -162,7 +140,7 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
 
   const allMembers = [
     ...(project.owner ? [project.owner] : []),
-    ...(project.members
+    ...(project.memberships
       ?.map((member) => member.user)
       .filter((user): user is User => !!user) || []),
   ];
@@ -379,7 +357,11 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#8884d8" />
+                    <Bar dataKey="value">
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

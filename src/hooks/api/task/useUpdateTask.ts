@@ -11,11 +11,18 @@ const useUpdateTask = (projectId?: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      ...payload
-    }: UpdateTaskPayload & { id: string }) => {
-      const { data } = await axiosInstance.patch(`/tasks/${id}`, payload);
+    mutationFn: async (
+      payload: Partial<UpdateTaskPayload> & { id: string }
+    ) => {
+      const { id, title, description, assigneeId, status } = payload;
+      const updateData: Record<string, any> = {};
+
+      if (title) updateData.title = title;
+      if (description) updateData.description = description;
+      if (assigneeId) updateData.assigneeId = assigneeId;
+      if (status) updateData.status = status;
+
+      const { data } = await axiosInstance.patch(`/tasks/${id}`, updateData);
       return data;
     },
     onSuccess: (_, variables) => {
@@ -25,7 +32,7 @@ const useUpdateTask = (projectId?: string) => {
       }
     },
     onError: (error: AxiosError<any>) => {
-      toast.error(error.response?.data.message || "Failed to update task");
+      toast.error(error.response?.data?.message || "Failed to update task");
     },
   });
 };

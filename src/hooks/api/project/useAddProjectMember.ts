@@ -7,8 +7,7 @@ import { toast } from "sonner";
 
 interface AddMemberPayload {
   projectId: string;
-  userId?: string;
-  email?: string;
+  email: string;
 }
 
 const useAddProjectMember = () => {
@@ -17,15 +16,21 @@ const useAddProjectMember = () => {
 
   return useMutation({
     mutationFn: async (payload: AddMemberPayload) => {
-      const { projectId, ...data } = payload;
+      const { projectId, email } = payload;
+
+      console.log("Sending invite request:");
+      console.log("URL:", `/projects/${projectId}/members`);
+      console.log("Payload:", { email });
+
       const { data: result } = await axiosInstance.post(
         `/projects/${projectId}/members`,
-        data
+        { email }
       );
+
       return result;
     },
     onSuccess: (_, variables) => {
-      toast.success("Member added successfully");
+      toast.success("Member invited successfully");
       queryClient.invalidateQueries({
         queryKey: ["project", variables.projectId],
       });
@@ -34,7 +39,7 @@ const useAddProjectMember = () => {
       });
     },
     onError: (error: AxiosError<any>) => {
-      toast.error(error.response?.data.message || "Failed to add member");
+      toast.error(error.response?.data.message || "Failed to invite member");
     },
   });
 };

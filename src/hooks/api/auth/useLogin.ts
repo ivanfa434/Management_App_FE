@@ -10,7 +10,6 @@ import { signIn } from "next-auth/react";
 
 const useLogin = () => {
   const router = useRouter();
-  // const { onAuthSuccess } = useAuthStore();
 
   return useMutation({
     mutationFn: async (payload: Pick<User, "email" | "password">) => {
@@ -20,7 +19,6 @@ const useLogin = () => {
     onSuccess: async (data) => {
       await signIn("credentials", { ...data, redirect: false });
       toast.success("Login success");
-      // onAuthSuccess({ user: data, accessToken: data.accessToken });
       router.push("/");
     },
     onError: (error: AxiosError<any>) => {
