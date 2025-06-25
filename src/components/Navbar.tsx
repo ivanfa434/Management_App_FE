@@ -11,11 +11,13 @@ const Navbar = () => {
   if (status === "loading") {
     return (
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <div className="mr-4 flex">
-            <Link href="/" className="mr-6 flex items-center space-x-2">
+        <div className="container mx-auto px-4 flex h-14 items-center">
+          <div className="flex">
+            <Link href="/" className="flex items-center space-x-2">
               <FolderKanban className="h-6 w-6" />
-              <span className="font-bold">ProjectManager</span>
+              <span className="font-bold hidden sm:inline-block">
+                ProjectManager
+              </span>
             </Link>
           </div>
         </div>
@@ -25,43 +27,56 @@ const Navbar = () => {
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <div className="mr-4 flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
+      <div className="container mx-auto px-4 flex h-14 items-center justify-between">
+        {/* Logo */}
+        <div className="flex">
+          <Link href="/" className="flex items-center space-x-2">
             <FolderKanban className="h-6 w-6" />
-            <span className="font-bold">ProjectManager</span>
+            <span className="font-bold hidden sm:inline-block">
+              ProjectManager
+            </span>
           </Link>
         </div>
 
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+        {/* Navigation */}
+        <div className="flex items-center space-x-2 sm:space-x-4">
           {session ? (
-            <div className="flex items-center space-x-4">
+            <>
               <Link href="/dashboard">
-                <Button variant="ghost">Dashboard</Button>
+                <Button variant="ghost" size="sm" className="hidden sm:flex">
+                  Dashboard
+                </Button>
               </Link>
-              <div className="flex items-center space-x-2">
+
+              {/* User Info - Hidden on mobile */}
+              <div className="hidden md:flex items-center space-x-2">
                 <User className="h-4 w-4" />
-                <span className="text-sm">{session.user.name}</span>
+                <span className="text-sm truncate max-w-[120px]">
+                  {session.user.name}
+                </span>
               </div>
+
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => signOut()}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-1 sm:space-x-2"
               >
                 <LogOut className="h-4 w-4" />
-                <span>Logout</span>
+                <span className="hidden sm:inline">Logout</span>
               </Button>
-            </div>
+            </>
           ) : (
-            <div className="flex items-center space-x-2">
+            <>
               <Link href="/login">
-                <Button variant="ghost">Login</Button>
+                <Button variant="ghost" size="sm">
+                  Login
+                </Button>
               </Link>
               <Link href="/register">
-                <Button>Register</Button>
+                <Button size="sm">Register</Button>
               </Link>
-            </div>
+            </>
           )}
         </div>
       </div>
