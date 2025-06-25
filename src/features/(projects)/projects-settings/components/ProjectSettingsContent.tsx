@@ -56,6 +56,7 @@ import useUpdateProject from "@/hooks/api/project/useUpdateProject";
 import useGetUsers from "@/hooks/api/users/useGetUsers";
 import { getChangedValues } from "@/utils/getChangedValues";
 import { InviteMemberSchema } from "../schema";
+import NotFound from "@/components/NotFound";
 
 interface ProjectSettingsContentProps {
   projectId: string;
@@ -139,7 +140,12 @@ export function ProjectSettingsContent({
   }
 
   if (!project || error) {
-    return <NoData />;
+    return (
+      <NotFound
+        title="Project Not Found"
+        description="The project you're looking for doesn't exist or you don't have access to it."
+      />
+    );
   }
 
   const currentUserId = session?.user?.id;
