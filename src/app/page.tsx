@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
 export default async function HomePage() {
-  // Preload auth module
   if (typeof window !== "undefined") {
     import("@/components/Loading")
   }
