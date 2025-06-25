@@ -1,7 +1,17 @@
 "use client";
 
-import Loading from "@/components/Loading";
 import NoData from "@/components/NoData";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,44 +28,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useFormik } from "formik";
 import {
+  Download,
+  Edit,
+  Save,
+  Settings,
   Trash2,
   UserPlus,
   Users,
-  Download,
-  Settings,
-  Edit,
-  Save,
   X,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 
-// Add these imports at the top
-import useExportProject from "@/hooks/export/useExportProject";
-import useAddProjectMember from "@/hooks/project/useAddProjectMember";
-import useDeleteProject from "@/hooks/project/useDeleteProject";
-import useGetProject from "@/hooks/project/useGetProject";
-import useGetProjectMembers from "@/hooks/project/useGetProjectMembers";
-import useRemoveProjectMember from "@/hooks/project/useRemoveProjectMember";
-import useUpdateProject from "@/hooks/project/useUpdateProject";
+import { SettingsSkeleton } from "@/components/LoadingSkeleton";
+import useExportProject from "@/hooks/api/export/useExportProject";
+import useAddProjectMember from "@/hooks/api/project/useAddProjectMember";
+import useDeleteProject from "@/hooks/api/project/useDeleteProject";
+import useGetProject from "@/hooks/api/project/useGetProject";
+import useGetProjectMembers from "@/hooks/api/project/useGetProjectMembers";
+import useRemoveProjectMember from "@/hooks/api/project/useRemoveProjectMember";
+import useUpdateProject from "@/hooks/api/project/useUpdateProject";
+import useGetUsers from "@/hooks/api/users/useGetUsers";
+import { getChangedValues } from "@/utils/getChangedValues";
 import { InviteMemberSchema } from "../schema";
-import useGetUsers from "@/hooks/users/useGetUsers";
 
 interface ProjectSettingsContentProps {
   projectId: string;
@@ -69,7 +69,6 @@ export function ProjectSettingsContent({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditingProject, setIsEditingProject] = useState(false);
 
-  // Replace the existing hooks with these new ones
   const { data: projectMembers, isPending: isMembersLoading } =
     useGetProjectMembers(projectId);
   const { mutateAsync: addMember, isPending: isAddingMember } =
@@ -84,46 +83,47 @@ export function ProjectSettingsContent({
     useExportProject();
   const { data: users } = useGetUsers();
 
-  // Formik for invite member
-  const formik = useFormik({
+  const initialProjectValues = {
+    title: project?.title || "",
+    description: project?.description || "",
+  };
+
+  const inviteMemberFormik = useFormik({
     initialValues: { email: "" },
     validationSchema: InviteMemberSchema,
     onSubmit: async (values) => {
-      const selectedUser = users?.find((user) => user.email === values.email);
       await addMember({
         projectId,
-        userId: selectedUser?.id,
         email: values.email,
       });
+
       setIsDialogOpen(false);
-      formik.resetForm();
+      inviteMemberFormik.resetForm();
     },
   });
 
-  // Formik for update project
-  const updateFormik = useFormik({
-    initialValues: {
-      title: project?.title || "",
-      description: project?.description || "",
-    },
+  const updateProjectFormik = useFormik({
+    initialValues: initialProjectValues,
     enableReinitialize: true,
     onSubmit: async (values) => {
-      await updateProject({
-        title: values.title,
-        description: values.description,
-      });
+      const payload = getChangedValues(values, initialProjectValues);
+
+      if (Object.keys(payload).length > 0) {
+        await updateProject(payload);
+      }
+
       setIsEditingProject(false);
     },
   });
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
-    formik.resetForm();
+    inviteMemberFormik.resetForm();
   };
 
   const handleEditCancel = () => {
     setIsEditingProject(false);
-    updateFormik.resetForm();
+    updateProjectFormik.resetForm();
   };
 
   const handleDeleteProject = async () => {
@@ -135,14 +135,13 @@ export function ProjectSettingsContent({
   };
 
   if (isPending || isMembersLoading) {
-    return <Loading />;
+    return <SettingsSkeleton />;
   }
 
   if (!project || error) {
     return <NoData />;
   }
 
-  // Enhanced ownership check with fallbacks
   const currentUserId = session?.user?.id;
   const projectOwnerId = project?.ownerId || project?.owner?.id;
   const isOwner =
@@ -150,7 +149,6 @@ export function ProjectSettingsContent({
 
   return (
     <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
-      {/* Header Section */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-6 lg:mb-8">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
@@ -164,7 +162,6 @@ export function ProjectSettingsContent({
           </p>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             variant="outline"
@@ -196,7 +193,10 @@ export function ProjectSettingsContent({
                   </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={formik.handleSubmit} className="space-y-5 mt-4">
+                <form
+                  onSubmit={inviteMemberFormik.handleSubmit}
+                  className="space-y-5 mt-4"
+                >
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium">
                       Email Address *
@@ -206,21 +206,32 @@ export function ProjectSettingsContent({
                       name="email"
                       type="email"
                       placeholder="Enter email address"
-                      value={formik.values.email}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
+                      value={inviteMemberFormik.values.email}
+                      onChange={inviteMemberFormik.handleChange}
+                      onBlur={inviteMemberFormik.handleBlur}
                       className={`${
-                        formik.touched.email && formik.errors.email
+                        inviteMemberFormik.touched.email &&
+                        inviteMemberFormik.errors.email
                           ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                           : ""
                       }`}
                       autoComplete="email"
+                      list="users-list"
                     />
-                    {formik.touched.email && formik.errors.email && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {formik.errors.email}
-                      </p>
-                    )}
+
+                    <datalist id="users-list">
+                      {Array.isArray(users) &&
+                        users.map((user) => (
+                          <option key={user.id} value={user.email} />
+                        ))}
+                    </datalist>
+
+                    {inviteMemberFormik.touched.email &&
+                      inviteMemberFormik.errors.email && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {inviteMemberFormik.errors.email}
+                        </p>
+                      )}
                   </div>
 
                   <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
@@ -235,7 +246,10 @@ export function ProjectSettingsContent({
                     </Button>
                     <Button
                       type="submit"
-                      disabled={isAddingMember || !formik.values.email.trim()}
+                      disabled={
+                        isAddingMember ||
+                        !inviteMemberFormik.values.email.trim()
+                      }
                       className="w-full sm:w-auto"
                     >
                       {isAddingMember ? "Inviting..." : "Send Invitation"}
@@ -248,9 +262,7 @@ export function ProjectSettingsContent({
         </div>
       </div>
 
-      {/* Content Section */}
       <div className="grid gap-4 sm:gap-6 max-w-6xl">
-        {/* Project Information Card */}
         <Card className="border-border hover:shadow-lg hover:shadow-blue-50 transition-all duration-200">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
@@ -276,7 +288,10 @@ export function ProjectSettingsContent({
           </CardHeader>
           <CardContent className="space-y-4">
             {isEditingProject ? (
-              <form onSubmit={updateFormik.handleSubmit} className="space-y-4">
+              <form
+                onSubmit={updateProjectFormik.handleSubmit}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="title" className="text-sm font-medium">
                     Project Name *
@@ -284,10 +299,18 @@ export function ProjectSettingsContent({
                   <Input
                     id="title"
                     name="title"
-                    value={updateFormik.values.title}
-                    onChange={updateFormik.handleChange}
+                    value={updateProjectFormik.values.title}
+                    onChange={updateProjectFormik.handleChange}
+                    onBlur={updateProjectFormik.handleBlur}
                     placeholder="Enter project name"
+                    required
                   />
+                  {updateProjectFormik.touched.title &&
+                    updateProjectFormik.errors.title && (
+                      <p className="text-xs text-red-500">
+                        {updateProjectFormik.errors.title}
+                      </p>
+                    )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description" className="text-sm font-medium">
@@ -296,11 +319,19 @@ export function ProjectSettingsContent({
                   <Textarea
                     id="description"
                     name="description"
-                    value={updateFormik.values.description}
-                    onChange={updateFormik.handleChange}
+                    value={updateProjectFormik.values.description}
+                    onChange={updateProjectFormik.handleChange}
+                    onBlur={updateProjectFormik.handleBlur}
                     placeholder="Enter project description"
                     rows={3}
+                    style={{ resize: "none" }}
                   />
+                  {updateProjectFormik.touched.description &&
+                    updateProjectFormik.errors.description && (
+                      <p className="text-xs text-red-500">
+                        {updateProjectFormik.errors.description}
+                      </p>
+                    )}
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button type="submit" size="sm" disabled={isUpdatingProject}>
@@ -363,7 +394,6 @@ export function ProjectSettingsContent({
           </CardContent>
         </Card>
 
-        {/* Team Members Card */}
         <Card className="border-border hover:shadow-lg hover:shadow-blue-50 transition-all duration-200">
           <CardHeader className="pb-4">
             <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
@@ -372,7 +402,7 @@ export function ProjectSettingsContent({
                   Team Members
                 </CardTitle>
                 <CardDescription className="text-sm text-muted-foreground">
-                  Manage project team members and their roles
+                  Manage project team members
                 </CardDescription>
               </div>
               <div className="text-sm text-muted-foreground">
@@ -382,7 +412,6 @@ export function ProjectSettingsContent({
           </CardHeader>
 
           <CardContent className="space-y-3">
-            {/* Owner */}
             <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg bg-blue-50/50 border-blue-200/50">
               <div className="flex items-center space-x-3">
                 <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -404,7 +433,6 @@ export function ProjectSettingsContent({
               </div>
             </div>
 
-            {/* Members */}
             {projectMembers?.map((member) => (
               <div
                 key={member.id}
@@ -425,9 +453,6 @@ export function ProjectSettingsContent({
                 </div>
 
                 <div className="flex items-center space-x-2 flex-shrink-0">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 capitalize">
-                    {member.role}
-                  </span>
                   {isOwner && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -478,7 +503,6 @@ export function ProjectSettingsContent({
           </CardContent>
         </Card>
 
-        {/* Danger Zone - Only show for owners */}
         {isOwner && (
           <Card className="border-red-200 bg-red-50/30">
             <CardHeader className="pb-4">

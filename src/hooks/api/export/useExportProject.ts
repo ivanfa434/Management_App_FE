@@ -14,7 +14,6 @@ const useExportProject = () => {
       return data;
     },
     onSuccess: (data, projectId) => {
-      // Create and download JSON file
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: "application/json",
       });

@@ -1,4 +1,3 @@
-// File: page.tsx (Project Page Route)
 import { ProjectPage } from "@/features/(projects)/projects";
 
 interface ProjectPageProps {

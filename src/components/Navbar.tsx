@@ -28,7 +28,6 @@ const Navbar = () => {
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 flex h-14 items-center justify-between">
-        {/* Logo */}
         <div className="flex">
           <Link href="/" className="flex items-center space-x-2">
             <FolderKanban className="h-6 w-6" />
@@ -38,7 +37,6 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Navigation */}
         <div className="flex items-center space-x-2 sm:space-x-4">
           {session ? (
             <>
@@ -48,7 +46,6 @@ const Navbar = () => {
                 </Button>
               </Link>
 
-              {/* User Info - Hidden on mobile */}
               <div className="hidden md:flex items-center space-x-2">
                 <User className="h-4 w-4" />
                 <span className="text-sm truncate max-w-[120px]">

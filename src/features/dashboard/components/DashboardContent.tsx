@@ -1,6 +1,5 @@
 "use client";
 
-import Loading from "@/components/Loading";
 import NoData from "@/components/NoData";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,11 +20,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import useCreateProject from "@/hooks/project/useCreateProject";
-import useGetProjects from "@/hooks/project/useGetProjects";
-
+import useCreateProject from "@/hooks/api/project/useCreateProject";
+import useGetProjects from "@/hooks/api/project/useGetProjects";
+import { DashboardSkeleton } from "@/components/LoadingSkeleton";
 import { useFormik } from "formik";
-import { Plus, Users, CheckSquare, Calendar } from "lucide-react";
+import { Calendar, CheckSquare, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { CreateProjectSchema } from "../schema";
@@ -37,7 +36,10 @@ export function DashboardContent() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const formik = useFormik({
-    initialValues: { title: "", description: "" },
+    initialValues: {
+      title: "",
+      description: "",
+    },
     validationSchema: CreateProjectSchema,
     onSubmit: async (values) => {
       try {
@@ -56,12 +58,13 @@ export function DashboardContent() {
   };
 
   if (isPending) {
-    return <Loading />;
+    return <DashboardSkeleton />;
   }
+
+  const hasProjects = projects && projects.length > 0;
 
   return (
     <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
-      {/* Header Section */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-6 lg:mb-8">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
@@ -79,6 +82,7 @@ export function DashboardContent() {
               New Project
             </Button>
           </DialogTrigger>
+
           <DialogContent className="sm:max-w-md mx-4 sm:mx-0">
             <DialogHeader className="space-y-3">
               <DialogTitle className="text-lg font-semibold">
@@ -101,11 +105,11 @@ export function DashboardContent() {
                   value={formik.values.title}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`${
+                  className={
                     formik.touched.title && formik.errors.title
                       ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                       : ""
-                  }`}
+                  }
                   autoComplete="off"
                   maxLength={100}
                 />
@@ -133,8 +137,7 @@ export function DashboardContent() {
                   className="resize-none min-h-[80px]"
                   maxLength={500}
                 />
-                <div className="flex justify-between items-center">
-                  <div></div>
+                <div className="flex justify-end">
                   <span className="text-xs text-muted-foreground">
                     {formik.values.description.length}/500
                   </span>
@@ -164,8 +167,7 @@ export function DashboardContent() {
         </Dialog>
       </div>
 
-      {/* Content Section */}
-      {!projects || projects.length === 0 ? (
+      {!hasProjects ? (
         <div className="text-center py-12 lg:py-16">
           <NoData />
           <div className="mt-6 space-y-2">
@@ -196,24 +198,24 @@ export function DashboardContent() {
                       {project.description || "No description provided"}
                     </CardDescription>
                   </CardHeader>
+
                   <CardContent className="pt-0">
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-1">
-                            <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">
-                              {project._count?.members || 0}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <CheckSquare className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">
-                              {project._count?.tasks || 0}
-                            </span>
-                          </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-1">
+                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">
+                            {project._count?.memberships || 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <CheckSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">
+                            {project._count?.tasks || 0}
+                          </span>
                         </div>
                       </div>
+
                       <div className="flex items-center space-x-1 pt-1 border-t border-border/50">
                         <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">

@@ -1,7 +1,6 @@
 "use client";
 
-import { FC } from "react";
-import { useFormik } from "formik";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,10 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { CreateTaskSchema } from "../schema";
+import { Textarea } from "@/components/ui/textarea";
 import type { Task } from "@/types/task";
 import type { User } from "@/types/user";
+import { getChangedValues } from "@/utils/getChangedValues";
+import { useFormik } from "formik";
+import { FC } from "react";
+import { CreateTaskSchema } from "../schema";
 
 interface EditTaskDialogProps {
   task: Task;
@@ -41,27 +42,24 @@ export const EditTaskDialog: FC<EditTaskDialogProps> = ({
   onUpdate,
   isUpdating,
 }) => {
+  const initialValues = {
+    title: task.title || "",
+    description: task.description || "",
+    assigneeId: task.assigneeId || "",
+    status: task.status || "",
+  };
+
   const formik = useFormik({
-    initialValues: {
-      title: task.title,
-      description: task.description || "",
-      assigneeId: task.assigneeId || "",
-      status: task.status,
-    },
+    initialValues: initialValues,
     validationSchema: CreateTaskSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        await onUpdate(task.id, {
-          title: values.title,
-          description: values.description || undefined,
-          assigneeId: values.assigneeId || undefined,
-          status: values.status,
-        });
+        const payload = getChangedValues(values, initialValues);
+        await onUpdate(task.id, payload);
         onClose();
       } catch (error) {
         console.error("Error updating task:", error);
-        // Optionally show error message to user
       }
     },
   });
