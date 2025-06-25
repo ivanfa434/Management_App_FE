@@ -28,7 +28,7 @@ import { useFormik } from "formik";
 import { Plus, Users, CheckSquare, Calendar } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { CreateProjectSchema } from "../CreateProjectSchema";
+import { CreateProjectSchema } from "../schema";
 
 export function DashboardContent() {
   const { data: projects, isPending } = useGetProjects();
