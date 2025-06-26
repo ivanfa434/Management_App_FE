@@ -34,7 +34,7 @@ import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useFormik } from "formik";
 import { BarChart3, Plus, Settings } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -71,6 +71,10 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [dragUpdatingTaskId, setDragUpdatingTaskId] = useState<string | null>(
+    null
+  );
+  const [allTasks, setAllTasks] = useState(tasks || project?.tasks || []);
 
   const formik = useFormik({
     initialValues: { title: "", description: "", assigneeId: "" },
@@ -86,21 +90,27 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
     },
   });
 
+  useEffect(() => {
+    setAllTasks(tasks || project?.tasks || []);
+  }, [tasks, project?.tasks]);
+
   const handleStatusChange = async (taskId: string, newStatus: string) => {
     await updateTask({ id: taskId, status: newStatus as any });
   };
 
-  const handleTaskUpdate = async (taskId: string, data: any) => {
+  const handleTaskUpdate = async (
+    taskId: string,
+    data: Partial<Omit<Task, "id">>
+  ) => {
     await updateTask({ id: taskId, ...data });
   };
-
   const handleTaskDelete = async (taskId: string) => {
     if (confirm("Are you sure you want to delete this task?")) {
       await deleteTask(taskId);
     }
   };
 
-  const onDragEnd = (result: DropResult) => {
+  const onDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
     if (!destination) return;
@@ -112,9 +122,32 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
       DONE: "DONE",
     };
 
-    const newStatus = statusMap[destination.droppableId];
+    const newStatus = statusMap[destination.droppableId] as
+      | "TODO"
+      | "IN_PROGRESS"
+      | "DONE";
+
     if (newStatus) {
-      handleStatusChange(draggableId, newStatus);
+      // Prevent double drag update
+      if (dragUpdatingTaskId) return;
+
+      try {
+        setDragUpdatingTaskId(draggableId);
+
+        // Optimistic UI
+        setAllTasks((prev) =>
+          prev.map((task) =>
+            task.id === draggableId ? { ...task, status: newStatus } : task
+          )
+        );
+
+        await handleStatusChange(draggableId, newStatus);
+      } catch (error) {
+        console.error("Failed to update task status:", error);
+        // Optional: Rollback UI di sini kalau mau
+      } finally {
+        setDragUpdatingTaskId(null);
+      }
     }
   };
 
@@ -131,12 +164,7 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
     );
   }
 
-  const allTasks = tasks || project.tasks || [];
-
-  const todoTasks = allTasks.filter((task) => task.status === "TODO") || [];
-  const inProgressTasks =
-    allTasks.filter((task) => task.status === "IN_PROGRESS") || [];
-  const doneTasks = allTasks.filter((task) => task.status === "DONE") || [];
+  console.log(allTasks);
 
   const allMembers = [
     ...(project.owner ? [project.owner] : []),
@@ -374,27 +402,34 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 min-h-[400px] lg:min-h-[600px]">
           <TaskColumn
             title="Todo"
-            tasks={todoTasks}
+            tasks={allTasks.filter((task) => task.status === "TODO") || []}
             status="TODO"
             setEditingTask={setEditingTask}
             handleTaskDelete={handleTaskDelete}
             isDeletingTask={isDeletingTask}
+            dragUpdatingTaskId={dragUpdatingTaskId}
           />
+
           <TaskColumn
             title="In Progress"
-            tasks={inProgressTasks}
+            tasks={
+              allTasks.filter((task) => task.status === "IN_PROGRESS") || []
+            }
             status="IN_PROGRESS"
             setEditingTask={setEditingTask}
             handleTaskDelete={handleTaskDelete}
             isDeletingTask={isDeletingTask}
+            dragUpdatingTaskId={dragUpdatingTaskId}
           />
+
           <TaskColumn
             title="Done"
-            tasks={doneTasks}
+            tasks={allTasks.filter((task) => task.status === "DONE") || []}
             status="DONE"
             setEditingTask={setEditingTask}
             handleTaskDelete={handleTaskDelete}
             isDeletingTask={isDeletingTask}
+            dragUpdatingTaskId={dragUpdatingTaskId}
           />
         </div>
       </DragDropContext>

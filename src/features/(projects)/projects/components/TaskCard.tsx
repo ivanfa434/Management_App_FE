@@ -19,6 +19,7 @@ interface TaskCardProps {
   setEditingTask: (task: Task) => void;
   handleTaskDelete: (taskId: string) => void;
   isDeletingTask: boolean;
+  isDragDisabled: boolean; // ✅ Tambahan untuk logic drag
 }
 
 export const TaskCard = ({
@@ -27,8 +28,13 @@ export const TaskCard = ({
   setEditingTask,
   handleTaskDelete,
   isDeletingTask,
+  isDragDisabled,
 }: TaskCardProps) => (
-  <Draggable draggableId={task.id} index={index}>
+  <Draggable
+    draggableId={task.id}
+    index={index}
+    isDragDisabled={isDragDisabled} // ✅ Disable drag jika perlu
+  >
     {(provided, snapshot) => (
       <Card
         ref={provided.innerRef}
@@ -70,12 +76,14 @@ export const TaskCard = ({
               </Button>
             </div>
           </div>
+
           {task.description && (
             <CardDescription className="text-xs line-clamp-2">
               {task.description}
             </CardDescription>
           )}
         </CardHeader>
+
         <CardContent className="pt-0 p-3 lg:p-4 lg:pt-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -90,6 +98,7 @@ export const TaskCard = ({
                 <span>{new Date(task.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
+
             <Badge
               className="text-xs"
               style={{
@@ -109,6 +118,11 @@ export const TaskCard = ({
                 : "Done"}
             </Badge>
           </div>
+
+          {/* ✅ Tambahan indicator updating */}
+          {isDragDisabled && (
+            <p className="text-xs text-muted-foreground mt-2">Updating...</p>
+          )}
         </CardContent>
       </Card>
     )}

@@ -9,6 +9,7 @@ interface TaskColumnProps {
   setEditingTask: (task: Task) => void;
   handleTaskDelete: (taskId: string) => void;
   isDeletingTask: boolean;
+  dragUpdatingTaskId: string | null; // ✅ Tambah prop baru
 }
 
 export const TaskColumn = ({
@@ -18,6 +19,7 @@ export const TaskColumn = ({
   setEditingTask,
   handleTaskDelete,
   isDeletingTask,
+  dragUpdatingTaskId, // ✅ Terima di sini
 }: TaskColumnProps) => (
   <div className="flex-1 min-w-0">
     <div className="bg-muted/50 rounded-lg p-3 lg:p-4 h-full">
@@ -44,6 +46,7 @@ export const TaskColumn = ({
                 setEditingTask={setEditingTask}
                 handleTaskDelete={handleTaskDelete}
                 isDeletingTask={isDeletingTask}
+                isDragDisabled={dragUpdatingTaskId === task.id} // ✅ Disable drag kalau task ini lagi updating
               />
             ))}
             {provided.placeholder}
