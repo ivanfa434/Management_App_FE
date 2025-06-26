@@ -18,10 +18,6 @@ const useAddProjectMember = () => {
     mutationFn: async (payload: AddMemberPayload) => {
       const { projectId, email } = payload;
 
-      console.log("Sending invite request:");
-      console.log("URL:", `/projects/${projectId}/members`);
-      console.log("Payload:", { email });
-
       const { data: result } = await axiosInstance.post(
         `/projects/${projectId}/members`,
         { email }

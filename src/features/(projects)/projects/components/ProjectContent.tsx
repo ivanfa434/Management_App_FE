@@ -104,6 +104,7 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
   ) => {
     await updateTask({ id: taskId, ...data });
   };
+
   const handleTaskDelete = async (taskId: string) => {
     if (confirm("Are you sure you want to delete this task?")) {
       await deleteTask(taskId);
@@ -128,13 +129,11 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
       | "DONE";
 
     if (newStatus) {
-      // Prevent double drag update
       if (dragUpdatingTaskId) return;
 
       try {
         setDragUpdatingTaskId(draggableId);
 
-        // Optimistic UI
         setAllTasks((prev) =>
           prev.map((task) =>
             task.id === draggableId ? { ...task, status: newStatus } : task
@@ -144,7 +143,6 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
         await handleStatusChange(draggableId, newStatus);
       } catch (error) {
         console.error("Failed to update task status:", error);
-        // Optional: Rollback UI di sini kalau mau
       } finally {
         setDragUpdatingTaskId(null);
       }
@@ -163,8 +161,6 @@ export function ProjectContent({ projectId }: ProjectContentProps) {
       />
     );
   }
-
-  console.log(allTasks);
 
   const allMembers = [
     ...(project.owner ? [project.owner] : []),

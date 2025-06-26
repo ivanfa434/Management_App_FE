@@ -19,7 +19,7 @@ interface TaskCardProps {
   setEditingTask: (task: Task) => void;
   handleTaskDelete: (taskId: string) => void;
   isDeletingTask: boolean;
-  isDragDisabled: boolean; // ✅ Tambahan untuk logic drag
+  isDragDisabled: boolean;
 }
 
 export const TaskCard = ({
@@ -33,7 +33,7 @@ export const TaskCard = ({
   <Draggable
     draggableId={task.id}
     index={index}
-    isDragDisabled={isDragDisabled} // ✅ Disable drag jika perlu
+    isDragDisabled={isDragDisabled}
   >
     {(provided, snapshot) => (
       <Card
@@ -119,7 +119,6 @@ export const TaskCard = ({
             </Badge>
           </div>
 
-          {/* ✅ Tambahan indicator updating */}
           {isDragDisabled && (
             <p className="text-xs text-muted-foreground mt-2">Updating...</p>
           )}
